@@ -120,7 +120,7 @@ if(st!='play')return;
 /* HUD */
 g.font='8px monospace';g.textBaseline='top';g.fillStyle='rgba(0,0,0,.55)';g.fillRect(CW/2-45,2,90,12);g.fillStyle='#e8e4d0';g.textAlign='center';
 g.fillText('Dia '+day+'  '+String(Math.floor(h)).padStart(2,'0')+':'+String(Math.floor(time%60)).padStart(2,'0'),CW/2,4);g.textAlign='left';
-buildingLabel();if(!O.mini){g.globalAlpha=.8;g.drawImage(mm,CW-W*MMS-4,4,W*MMS,H*MMS);g.globalAlpha=1;for(const z of Z)if(P.some(p=>Math.hypot(p.x-z.x,p.y-z.y)<400)){g.fillStyle='#f33';g.fillRect(CW-W*MMS-4+z.x/T*MMS|0,4+z.y/T*MMS|0,1,1)}for(const p of A){g.fillStyle=pc[p.i];g.fillRect(CW-W*MMS-4+(p.x/T*MMS|0)-1,4+(p.y/T*MMS|0)-1,3,3)}}
+buildingLabel();worldLabel();if(!O.mini){g.globalAlpha=.8;g.drawImage(mm,CW-W*MMS-4,4,W*MMS,H*MMS);g.globalAlpha=1;for(const z of Z)if(P.some(p=>Math.hypot(p.x-z.x,p.y-z.y)<400)){g.fillStyle='#f33';g.fillRect(CW-W*MMS-4+z.x/T*MMS|0,4+z.y/T*MMS|0,1,1)}for(const p of A){g.fillStyle=pc[p.i];g.fillRect(CW-W*MMS-4+(p.x/T*MMS|0)-1,4+(p.y/T*MMS|0)-1,3,3)}}
 if(!O.hud)for(const p of (net?P.filter(q=>q.i===net.me):P)){const hi=net?0:p.i,X=hi%2?CW-106:4,Y=CH-62-(hi>>1)*62;g.fillStyle='rgba(0,0,0,.55)';g.fillRect(X,Y,102,58);g.fillStyle=pc[p.i];g.fillText(pn(p)+(p.dead?' (morto)':''),X+3,Y+2);
 [[p.hp,'#c33'],[p.food,'#d82'],[p.water,'#38c'],[p.en,'#cc3']].forEach((b,i)=>{g.fillStyle='#222';g.fillRect(X+3,Y+12+i*6,60,4);g.fillStyle=b[1];g.fillRect(X+3,Y+12+i*6,Math.max(0,b[0])*.6,4)});
 g.fillStyle='#ddd';g.fillText(WN[p.w]+(isGun(p.w)?' '+(p.mag[p.w]||0)+'/'+GUN[p.w].cap:''),X+3,Y+37);g.fillText('C'+p.inv.food+' A'+p.inv.water+' B'+p.inv.band+' M'+p.inv.ammo,X+3,Y+46);
@@ -279,15 +279,15 @@ if(!sv){sv=location.protocol==='file:'||!location.host?'localhost:3000':location
 const loc=/^(localhost|127\.|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(sv);
 try{ws=new WebSocket((loc?'ws://':'wss://')+sv)}catch(e){ns.textContent='Endereço do servidor inválido.';return}
 net={ws,me:0,host:false,nm,cont:$('wm')?$('wm').value==='1':false};
-ws.onopen=()=>ws.send(JSON.stringify({t:'join',nm,rm}));
+ws.onopen=()=>ws.send(JSON.stringify({t:'join',nm,rm,ded:DED?1:0}));
 ws.onerror=()=>{ns.textContent='Não conectou. Confira se o servidor está ligado e o endereço.'};
-ws.onclose=()=>{if(net){const was=st!='menu';netLeave();if(was){st='menu';show('main')}else ns.textContent='Desconectado.'}};
+ws.onclose=()=>{if(DED){setTimeout(()=>location.reload(),15000);return}if(net){const was=st!='menu';netLeave();if(was){st='menu';show('main')}else ns.textContent='Desconectado.'}};
 ws.onmessage=ev=>netMsg(JSON.parse(ev.data))}
 const b64=a=>btoa(String.fromCharCode(...a)),unb=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
 function sendInit(){netSend({t:'init',M:b64(M),FM:b64(FM),B:boxes.map(x=>[x.x,x.y]),BL:buildings,LD:ladders})}
 function mmake(){mm.width=W;mm.height=H;const cs=['#2f4a2a','#3a3a3c','#6e7078','#4a2a1e','#1c3a1c','#8a3a2a','#d8a860','#3a2a1e','#2f4a2a','#a8c0c8','#6a6c70'];for(let y=0;y<H;y++)for(let x=0;x<W;x++){mg.fillStyle=cs[M[y*W+x]];mg.fillRect(x,y,1,1)}}
 let ZID=0,MCV=0,MCS=-1;
-function snap(o){const near=z=>P.some(p=>!p.dead&&Math.abs(p.x-z.x)<400&&Math.abs(p.y-z.y)<260),s={tm:time,d:day,sl:sleeping?1:0,k:kills,o:o?1:0,rn:weather.rain?1:0,
+function snap(o){const near=z=>P.some(p=>!p.dead&&Math.abs(p.x-z.x)<400&&Math.abs(p.y-z.y)<260),s={hs:DED?'#':(P[net.me]?pn(P[net.me]):'?'),tm:time,d:day,sl:sleeping?1:0,k:kills,o:o?1:0,rn:weather.rain?1:0,
 P:P.map(p=>{const q={...p};delete q.rk;if(q.action)q.action={name:q.action.name,duration:q.action.duration,elapsed:q.action.elapsed,locked:q.action.locked,travel:q.action.travel};return q}),
 Z:Z.filter(near).map(z=>[Math.round(z.x),Math.round(z.y),z.c,z.mvg>0?1:0,Math.round((z.wa||0)*10),z.al>0?1:0,Math.round((z.ang||0)*100),z.knock>0?z.knock:0,z.cd>48?z.cd:0,z.t||0,z.spf>0?z.spf:0,z.kd||0,z.dn>0?z.dn:0,z.id||(z.id=++ZID)]),
 B:boxes.map(b=>b.done?1:0).join(''),G:gi.filter(near),m:msgs.slice(-4),E:effects.slice(-30)};
@@ -295,7 +295,8 @@ if(frame%16==0){s.D=decals.filter(near).slice(-40);s.Cp=corpses.filter(near).sli
 function gtick(){frame++;animClock++;netPredict();for(const L of [P,Z,NP])for(const o of L)if(o.gx!=null&&!(net&&o.i===net.me&&o.inv)){o.x+=(o.gx-o.x)*.22;o.y+=(o.gy-o.y)*.22};gases=gases.filter(q=>--q.l>0);effects=effects.filter(q=>--q.l>0);for(const d of decals)d.l--;for(const c of corpses){c.l--;c.dt=(c.dt||0)+1;if(c.rz>0)c.rz--}}
 function netMsg(m){
 if(m.t=='full'){$('ns').textContent='Sala cheia (4/4).';netLeave();return}
-if(m.t=='hi'){net.me=m.me;net.host=m.host;if(m.host){let ok=false;if(net.cont){try{const d=JSON.parse(localStorage.getItem('sc_save_on'));worldLoad(d,1);P[0].dead=0;ok=true}catch(e){}}if(!ok)start(1);P[0].nm=net.nm;dedMark();msg(ok?'Mundo salvo carregado (Dia '+day+'). Aguardando amigos...':'Sala criada. Aguardando amigos...')}else $('ns').textContent='Aguardando o anfitrião...';return}
+if(m.t=='busy'){netLeave();if(DED){const n=+(QS.get('t')||0);if(n<20)setTimeout(()=>{location.search='?dedicado=1&sala='+encodeURIComponent(QS.get('sala')||'sala1')+'&srv='+encodeURIComponent(QS.get('srv')||'')+'&t='+(n+1)},30000)}return}
+if(m.t=='hi'){net.me=m.me;net.host=m.host;if(m.host){let ok=false;if(net.cont){try{const d=JSON.parse(localStorage.getItem('sc_save_on'));worldLoad(d,1);P[0].dead=0;ok=true}catch(e){}}if(!ok)start(1);P[0].nm=net.nm;dedMark();msg(ok?'Mundo salvo carregado (Dia '+day+'). Aguardando amigos...':'Sala criada. Aguardando amigos...')}else $('ns').textContent=m.wait?'Ligando o servidor do mundo... pode levar até 2 minutos. Fique nesta tela.':'Aguardando o anfitrião...';return}
 if(m.t=='end'){netLeave();st='menu';show('main');return}
 if(m.t=='promote'){becomeHost(m);return}
 if(m.t=='newhost'){if(!net.host)msg('O anfitrião saiu. '+(m.nm||'Outro jogador')+' assumiu a partida.');return}
@@ -310,7 +311,7 @@ if(net.host){
   else if(m.t=='ia')ia(m.k,m.a,p)}
  return}
 if(m.t=='init'){M=unb(m.M);FM=unb(m.FM);boxes=m.B.map(a=>({x:a[0],y:a[1],done:0}));buildings=m.BL;ladders=m.LD;mmake();BLD=[];NP=[];ND=[];SG=new Uint16Array(W*H);P=[];Z=[];gi=[];msgs=[];effects=[];gases=[];decals=[];corpses=[];invO=-1;paused=false;st='play';ov.style.display='none';buildHint(1)}
-else if(m.t=='snap'&&st!='menu'){const s=m.s;time=s.tm;day=s.d;sleeping=!!s.sl;kills=s.k;weather.rain=!!s.rn;const oP={};for(const q of P)oP[q.i]=q;P=s.P;gi=s.G;netFixP(oP);msgs=s.m;effects=s.E;if(s.D){decals=s.D;corpses=s.Cp}
+else if(m.t=='snap'&&st!='menu'){const s=m.s;net.hs=s.hs;time=s.tm;day=s.d;sleeping=!!s.sl;kills=s.k;weather.rain=!!s.rn;const oP={};for(const q of P)oP[q.i]=q;P=s.P;gi=s.G;netFixP(oP);msgs=s.m;effects=s.E;if(s.D){decals=s.D;corpses=s.Cp}
  const oZ=new Map(Z.map(z=>[z.id,z]));Z=s.Z.map(a=>({id:a[13],x:a[0],y:a[1],c:a[2],mvg:a[3]?3:0,wa:a[4]/10,al:a[5],ang:a[6]/100,knock:a[7]||0,cd:a[8]||0,t:a[9]||0,spf:a[10]||0,kd:a[11]||0,dn:a[12]||0,hp:3}));for(const z of Z){const q=oZ.get(z.id);if(q&&Math.abs(q.x-z.x)+Math.abs(q.y-z.y)<60){z.gx=z.x;z.gy=z.y;z.x=q.x;z.y=q.y}}if(s.Gs)gases=s.Gs.map(a=>({x:a[0],y:a[1],l:a[2]}));xSnapIn(s);boxes.forEach((b,i)=>b.done=+s.B[i]);
  const me=P.find(p=>p.i==net.me);if(me){if(me.hurt>16&&!(net.lh>16))playS('d',1);net.lh=me.hurt}
  if(invO>=0){const q=P[invO],sg=q&&JSON.stringify([q.inv,q.w,q.mag,q.pack,q.gear]);if(sg!=net.sg){net.sg=sg;rInv()}}
@@ -872,8 +873,10 @@ function becomeHost(m){net.host=true;const old=m.old;
 
 /* ---- servidor dedicado (roda o mundo sem personagem) ---- */
 const QS=new URLSearchParams(location.search),DED=QS.get('dedicado')==='1';let LEFTP={};
-function dedStart(){O.vol=0;show('multi');$('nn').value='Servidor';$('rm').value=QS.get('sala')||'sala1';$('sv').value=location.host;if($('wm'))$('wm').value='1';netJoin()}
-function dedMark(){if(!DED||!P[0])return;Object.assign(P[0],{srv:1,dead:1,gone:1,deathAge:999,x:-400,y:-400,nm:'Servidor'})}
+function dedStart(){O.vol=0;show('multi');$('nn').value='Servidor';$('rm').value=QS.get('sala')||'sala1';$('sv').value=QS.get('srv')||location.host;if($('wm'))$('wm').value='1';netJoin()}
+function dedMark(){if(!DED)return;while(P.length<=net.me)P.push(mkPlayer(P.length));P.forEach((q,i)=>{if(i!==net.me){q.dead=1;q.gone=1;q.rk={}}});Object.assign(P[net.me],{srv:1,dead:1,gone:1,deathAge:999,x:-400,y:-400,nm:'Servidor',rk:undefined})}
+function worldLabel(){if(!net||st!=='play')return;const t=net.host?'Mundo: no seu PC (você é o anfitrião)':net.hs==='#'?'Mundo: servidor':net.hs?'Mundo: PC de '+net.hs:'Mundo: conectando...',c=net.host?'#ffd27a':net.hs==='#'?'#8fe08f':'#9ec8ff';
+ g.font='7px monospace';const w=g.measureText(t).width+8;g.fillStyle='rgba(0,0,0,.55)';g.fillRect(4,4,w,10);g.fillStyle=c;g.fillText(t,8,5)}
 /* ===== LOOP ===== */
 let last=performance.now(),acc=0;
 function loop(t){acc=Math.min(acc+t-last,100);last=t;if(st=='play'&&!paused)while(acc>=16.67){if(net&&!net.host)gtick();else{upd();if(net&&frame%4==0)snap()}acc-=16.67}else acc=0;if(!DED)render();else if(frame%60===0)document.title='Silent City · servidor · Dia '+day;requestAnimationFrame(loop)}
