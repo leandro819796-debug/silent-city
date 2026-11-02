@@ -128,7 +128,7 @@ if(p.bleed){g.fillStyle='#f55';g.fillText('SANGRA',X+64,Y+12)}if(p.inf){g.fillSt
 drawExtraHud();renderPopup(ox,oy);msgs.slice(-3).forEach((m,i)=>{g.fillStyle='rgba(0,0,0,.5)';g.fillRect(CW/2-110,CH-38+i*10,220,10);g.fillStyle='#e8e4d0';g.textAlign='center';g.fillText(m.t,CW/2,CH-37+i*10);g.textAlign='left'})}
 /* ===== MENUS ===== */
 const B=(t,f,d)=>`<button onclick="${f}" ${d?'disabled':''}>${t}</button>`;
-const DEFAULT_SV=(/onrender\.com$/.test(location.host)?location.host:'');
+const DEFAULT_SV='silent-city.onrender.com';
 function svGet(k,d){try{const v=localStorage.getItem(k);return (v==null?d:v).replace(/"/g,'')}catch(e){return d}}
 function show(s,x){scr=s;ov.style.display='flex';$('hint').style.display='none';closeInv();let h='';
 if(s=='main')h=`<h1>SILENT CITY</h1><p class="s">Sobreviva. Não confie no silêncio.</p>${B('Jogar Solo','start(1)')}${B('Multiplayer',"sub('multi')")}${B('Opções',"sub('opts')")}${B('Controles',"sub('ctrl')")}`;
